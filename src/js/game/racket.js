@@ -1,4 +1,4 @@
-
+// 挡板
 
 function Racket(canvas, options) {
 	if(canvas === undefined)  throw 'racket 参数有问题'
@@ -7,6 +7,8 @@ function Racket(canvas, options) {
 	this.ctx = canvas.getContext('2d')
 	this.width = 240
 	this.height = 120 / 2
+	this.velocityX = 0
+	this.velocityY = 0
 	this.left = options.left || (canvas.width - this.width) / 2
 	this.top  = options.top || 467 * 2
 	this.fillStyle = options.fillStyle || '#fff'

@@ -8,7 +8,8 @@ var Racket = require('./game/racket')
 var Brick = require('./game/brick.js')
 var Ball = require('./game/ball')
 var getFps = require('./utils/fps')
-var detect2RectCollision = require('./utils/detect2RectCollision')
+var detect2RectCollision = require('./utils/detect2RectCollision').detect2RectCollision
+var afterCollised = require('./utils/detect2RectCollision').afterCollised
 
 require('../img/thumb1.png')
 require('../img/thumb2.png')
@@ -38,12 +39,6 @@ require('../img/thumb25.png')
 
 var Preloader = require('preloader.js')
 
-/**
- * init
- */
-function init() {
-	console.log('init ok')
-}
 
 
 var imgArr = []
@@ -63,13 +58,12 @@ var preloader = new Preloader({
 	concurrency: 6
 })
 preloader.addProgressListener(function(loaded, length) {
-	console.log('loaded', loaded, length, loaded / length)
+	// console.log('loaded', loaded, length, loaded / length)
 })
 preloader.addCompletionListener(function() {
 	// $('#o2_loading').remove()
 	$('#o2_main').removeClass('hide')
 
-	// init()
 	game.init()
 	game.start()
 
@@ -121,7 +115,7 @@ Game.prototype = {
 			this.bricks.push(brick)
 		}
 
-		console.log(this.bricks)
+		// console.log(this.bricks)
 
 			// 事件绑定
 			// 资源预加载
@@ -166,10 +160,19 @@ function loop(tick) {
 	// ctx.clearRect(0, 0, canvas.width, canvas.height)
 	game.clearScreen(ctx)
 
-	if (detect2RectCollision(game.racket, game.ball)) {
-		// game.ball.velocityX = -game.ball.velocityX
-		game.ball.velocityY = -game.ball.velocityY
-	}
+	var ballAndRacketAngle = detect2RectCollision(game.ball, game.racket)
+	console.log(ballAndRacketAngle)
+	afterCollised(game.ball, game.racket, ballAndRacketAngle)
+
+
+	/*for(var i = 0, len = game.bricks.length; i < len; i++) {
+		var curBrick = game.bricks[i]
+		var ballAndBrickAngle = detect2RectCollision(curBrick, game.ball)
+		// console.log(ballAndBrickAngle)
+		afterCollised(curBrick, game.ball, ballAndBrickAngle)
+	}*/
+
+
 
 	game.elements.forEach(function(ele, index) {
 		ele.draw()

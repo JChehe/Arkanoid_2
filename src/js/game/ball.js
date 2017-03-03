@@ -5,11 +5,11 @@ var Ball = function(canvas, options) {
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
 	this.left = options.left || 0
-	this.top = options.top || 0
+	this.top = options.top || 600
 	this.width = options.width || 32
 	this.height = options.height || 29
-	this.velocityX = options.velocityX || 5
-	this.velocityY = options.velocityY || 5
+	this.velocityX = options.velocityX || 2
+	this.velocityY = options.velocityY || 2
 	this.fillStyle = options.fillStyle || 'orange'
 	this.isRunning = false
 
