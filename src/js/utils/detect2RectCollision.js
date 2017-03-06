@@ -43,6 +43,22 @@ function afterCollised(rect1, rect2, angle) {
   }
 }
 
+function isOnTopHalfZone(angle) {
+   if(angle > 0 && angle < 180) {
+    return true
+   } else {
+    return false
+   }
+}
+
+function isOneLeftRightZone(angle) {
+  if(((angle >= 0 && angle < 45) || (angle > 315 && angle < 360)) || (angle >= 135 && angle < 225)) {
+    return true
+  } else {
+    return false
+  }
+}
+
 
 // function afterCollised(r1, r2, angle) {
 //   var w = 0.5 * (r1.width + r2.width);
@@ -85,5 +101,7 @@ function afterCollised(rect1, rect2, angle) {
 //   }
 // }
 
+exports.isOnTopHalfZone = isOnTopHalfZone
+exports.isOneLeftRightZone = isOneLeftRightZone
 exports.afterCollised = afterCollised
 exports.detect2RectCollision = detect2RectCollision

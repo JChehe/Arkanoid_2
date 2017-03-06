@@ -6,26 +6,24 @@ var Ball = function(canvas, options) {
 
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
-	this.left = options.left || 0
-	this.top = options.top || 600 / 2
-	this.width = options.width || 32
-	this.height = options.height || 29
-	this.velocityX = options.velocityX || getRandomNumber(2, 5)
+	this.left = options.left
+	this.top = options.top
+	this.width = options.width
+	this.height = options.height
+	this.velocityX = options.velocityX || getRandomNumber(-2, -5)
 	this.velocityY = options.velocityY || getRandomNumber(2, 5)
 	this.fillStyle = options.fillStyle || 'orange'
 	this.isRunning = false
 	this.on_imageObj = options.on_imageObj
 	this.off_imageObj = options.off_imageObj
-
-	// this.gameOverUpDistance = 50
-	this.isGameOver = false
+	this.isAbleCollisionWithRacket = true
 	this.isGameOverUp = true
 	this.isGameOverDown = false
 	this.gameOverMoveDistance = 0
-	this.gameOverMoveVelocity = 4
-
+	this.gameOverMoveVelocity = 4 * window.ratio
+	this.gameOverTargetDistance = 100 * window.ratio
 	// 碰撞到触板时，球的横向速度的改变基数
-	this.velocityChangeBase = 2
+	this.velocityChangeBase = 1
 
 	this.init()
 }
@@ -33,7 +31,6 @@ var Ball = function(canvas, options) {
 Ball.prototype = {
 	init: function() {
 		var canvas = this.canvas
-
 		this.isRunning = true
 	},
 
@@ -44,12 +41,9 @@ Ball.prototype = {
 		this._run()
 
 		ctx.save()
-		// ctx.fillStyle = this.fillStyle
-		// ctx.fillRect(this.left, this.top, this.width, this.height)
-
 		ctx.rect(this.left, this.top, this.width, this.height)
 		ctx.clip()
-		if(!this.isGameOver) {
+		if(!window.game.isGameOver) {
 			ctx.drawImage(this.on_imageObj, this.left, this.top, this.width, this.height)
 		} else {
 			ctx.drawImage(this.off_imageObj, this.left, this.top, this.width, this.height)
@@ -72,10 +66,9 @@ Ball.prototype = {
 			this._detectCollideEdge()
 		} 
 
-		if(this.isGameOver) {
+		if(window.game.isGameOver) {
 			this._gameOverMotion()
 		}
-
 	},
 
 	changeVelocityX: function(distanceOfcenterX) {
@@ -86,7 +79,6 @@ Ball.prototype = {
 		} else {
 			this.velocityX -= velocityXIncrement
 		}
-
 	},
 
 	_detectCollideEdge: function() {
@@ -99,26 +91,29 @@ Ball.prototype = {
 		if(left < 0) {
 			this.velocityX = -this.velocityX
 			this.left = 0
+			game.ball.isAbleCollisionWithRacket = true
 		} else if(left + width >= canvas.width) {
 			this.velocityX = -this.velocityX
 			this.left = canvas.width - width
+			game.ball.isAbleCollisionWithRacket = true
 		}
 		if(top < 0) {
 			this.velocityY = -this.velocityY
 			this.top = 0
+			game.ball.isAbleCollisionWithRacket = true
 		}
 
 		if(top + height > canvas.height) {
 			console.log('game over')
 			this.isRunning = false
-			this.isGameOver = true
+			window.game.isGameOver = true
 		}
 	},
 
 	_gameOverMotion: function() {
 		if(this.isGameOverUp) {
 			this.gameOverMoveDistance -= this.gameOverMoveVelocity
-			if(this.gameOverMoveDistance < -100) {
+			if(this.gameOverMoveDistance < -this.gameOverTargetDistance) {
 				this.isGameOverUp = false
 				this.isGameOverDown = true
 			} else {
@@ -127,19 +122,13 @@ Ball.prototype = {
 		}
 		if(this.isGameOverDown) {
 			this.gameOverMoveDistance += this.gameOverMoveVelocity
-			if(this.gameOverMoveDistance > 100) {
+			if(this.gameOverMoveDistance > this.gameOverTargetDistance) {
 				this.isGameOverUp = false
 				this.isGameOverDown = false
 			} else {
 				this._setPosition(this.left, this.top + this.gameOverMoveVelocity)
 			}
 		}
-		// console.log(this.gameOverMoveDistance)
-		// if(this.isGameOverUp || this.isGameOverDown) {
-		// 	this._setPosition(this.left, this.top + this.gameOverMoveDistance)
-		// }
-
-		
 	}
 }
 

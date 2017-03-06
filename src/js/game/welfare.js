@@ -1,22 +1,23 @@
-// 砖块
+// 通过福利：此处是公举
 
-function Brick(options, canvas) {
-	if(canvas === undefined) throw 'Brick 参数有问题'
+
+function Welfare(canvas, options) {
+	if(canvas === undefined) throw 'Welfare 参数有问题'
 	if(options === undefined) options = {}
 
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
-	this.left = options.left || 0
-	this.top = options.top || 0
+	this.left = options.left
+	this.top = options.top
 	this.width = options.width
 	this.height = options.height
-	this.fillStyle = options.fillStyle || 'red'
 	this.imageObj = options.imageObj
-	this.index = options.index
+	this.opacity = options.opacity || 0
 	this.isVisible = true
+	this.increaseLevel = options.increaseLevel || 1 / 25
 }
 
-Brick.prototype = {
+Welfare.prototype = {
 	draw: function() {
 		if(this.isVisible) {
 			var ctx = this.ctx,
@@ -25,10 +26,16 @@ Brick.prototype = {
 			ctx.save()
 			ctx.rect(this.left, this.top, this.width, this.height)
 			ctx.clip()
+			ctx.globalAlpha = this.opacity
 			ctx.drawImage(this.imageObj, this.left, this.top, this.width, this.height)
 			ctx.restore()
 		}
+	},
+
+	increaseOpacity: function() {
+		this.opacity += this.increaseLevel
 	}
 }
 
-module.exports = Brick
+
+module.exports = Welfare

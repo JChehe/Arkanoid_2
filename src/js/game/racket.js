@@ -4,12 +4,12 @@ function Racket(canvas, options) {
 	if(options === undefined) options = {}
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
-	this.width = 240 / 2
-	this.height = 120 / 2 / 2
+	this.width = options.width
+	this.height = options.height
 	this.velocityX = 0
 	this.velocityY = 0
-	this.left = options.left || (canvas.width - this.width) / 2
-	this.top  = options.top || 467 * 2 / 2
+	this.left = options.left
+	this.top  = options.top
 	this.fillStyle = options.fillStyle || '#fff'
 	this.isDragging = false
 
@@ -42,7 +42,9 @@ Racket.prototype = {
 			firstFinger = e.touches[0]
 		// mouse need to times ratio
 		console.log(window.ratio)
-		var canvasMouse = window.windowToCanvas(canvas, firstFinger.clientX * window.ratio, firstFinger.clientY * window.ratio)
+		var canvasMouse = window.windowToCanvas(canvas, 
+			firstFinger.clientX * window.ratio, 
+			firstFinger.clientY * window.ratio)
 
 		if(this._isPointInShape(canvasMouse)) {
 			this.isDragging = true
@@ -55,7 +57,6 @@ Racket.prototype = {
 						y: firstFinger.clientY * window.ratio - this.top
 					};
 				this._mouseMoveHandler.offset = offset
-
 			}
 		} else {
 			this.isDragging = false
@@ -64,18 +65,21 @@ Racket.prototype = {
 	},
 
 	_mouseMoveHandler: function(e) {
-		console.log('move')
 		if(this.isDragging && !game.isPaused) {
 			var canvas = this.canvas,
 				firstFinger = e.touches[0],
 				offset = this._mouseMoveHandler.offset,
-				canvasMouse = window.windowToCanvas(canvas, firstFinger.clientX * window.ratio, firstFinger.clientY * window.ratio)
+				canvasMouse = window.windowToCanvas(canvas, firstFinger.clientX * window.ratio, 
+																						firstFinger.clientY * window.ratio)
 
 			var left = canvasMouse.x - offset.x,
 				top = canvasMouse.y - offset.y
 
-			// if(left < 0) left = 0
-			// if(left > canvas.width - this.width) left = canvas.width - this.width
+			if(left < -this.width / 2) {
+				left = -this.width / 2
+			} else if (left > canvas.width - this.width / 2){
+				left = canvas.width - this.width / 2
+			}
 			this._setPosition(left, top)
 		}
 	},
@@ -95,7 +99,6 @@ Racket.prototype = {
 	_getPathOfShape: function() {
 		this.ctx.beginPath()
 		this.ctx.arc(this.left + this.width / 2, this.top, this.width / 2, 0, Math.PI, false)
-		// this.ctx.fillRect(this.left, this.top, this.width, this.height)
 		this.ctx.closePath()
 	},
 
@@ -112,6 +115,7 @@ Racket.prototype = {
 
 		// bottom semicircle
 		this._getPathOfShape()
+
 
 		// fill shape
 		ctx.fillStyle = this.fillStyle

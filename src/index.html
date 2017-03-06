@@ -14,13 +14,13 @@
 
 <body>
   <!-- begin loading 动画，对应的样式在 src/css/loading.scss -->
-  <!-- <div id="o2_loading" class="loading">
+  <div id="o2_loading" class="loading">
     <div class="inner">
       <i class="before"></i>
       <i class="after"></i>
     </div>
     <div class="text">loading</div>
-  </div> -->
+  </div>
   <!-- end loading -->
   <!-- begin 主体内容 -->
   <div id="o2_main" class="main hide">
@@ -29,19 +29,24 @@
     </canvas>
     <div class="game_start">
       <h1>打砖块拯救女神</h1>
+      <div class="game_intro">
+        <h3>玩法介绍</h3>
+        <ol>
+          <li>左右拖拽移动月台以反弹小娃娃，最终让小娃娃看到他心目中的白雪公举👸</li>
+          <li>blablabla...</li>
+        </ol>
+      </div>
       <button class="start_btn" type="button">我已饥渴难耐</button>
     </div>
     <div class="game_complete ">
       <h2 class="game_success">恭喜你，拯救女神成功</h2>
-      <h2 class="game_fail">差一点点，女神再召唤你</h2>
+      <h2 class="game_fail">差一点点，女神在召唤你</h2>
       <button type="button" class="play_again">再玩一次</button>
     </div>
-    <div class="game_intro fixed_bottom">
-      <h3>玩法介绍</h3>
-      <ol>
-        <li>左右拖拽移动月台</li>
-        <li>blablabla...</li>
-      </ol>
+    <div class="game_info fixed_bottom">
+      <p>占位</p>
+      <!-- <p class="game_score">分数：<span></span></p> -->
+      <!-- <p class="game_time">游戏时间：<span></span></p> -->
 
       <button class="pause_btn">暂停</button>
     </div>
