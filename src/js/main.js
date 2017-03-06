@@ -9,6 +9,7 @@ var Brick = require('./game/brick.js')
 var Ball = require('./game/ball')
 var Welfare = require('./game/Welfare')
 var getFps = require('./utils/fps')
+var isFunction = require('./utils/isfunction')
 var detect2RectCollision = require('./utils/detect2RectCollision').detect2RectCollision
 var afterCollised = require('./utils/detect2RectCollision').afterCollised
 var isOnTopHalfZone = require('./utils/detect2RectCollision').isOnTopHalfZone
@@ -45,6 +46,7 @@ function Game() {
 	this.lastFpsTime = 0
 	this.fpsDur = 1000
 	this.displayFps = 60
+	this.restartCount = 0
 }
 
 Game.prototype = {
@@ -53,7 +55,7 @@ Game.prototype = {
 		var racket = new Racket(canvas, {
 			width: 120 * ratio,
 			height: 30 * ratio,
-			top: (467) * ratio,
+			top: 467 * ratio,
 			left: (canvas.width - 120 * ratio) / 2
 		})
 		var ball = new Ball(canvas, {
@@ -82,8 +84,8 @@ Game.prototype = {
 		this.welfare = welfare
 		this.elements.push(background)
 		this.elements.push(welfare)
-		this.elements.push(ball)
 		this.elements.push(racket)
+		this.elements.push(ball)
 		this._initBricks()
 
 	},
@@ -95,6 +97,13 @@ Game.prototype = {
 	},
 
 	restart: function() {
+		this.elements.concat(this.bricks).forEach(function(ele) {
+			if(isFunction(ele.destroy)) {
+				ele.destroy()
+			}
+		})
+
+		this.restartCount++
 		this.hp = this.brickRow * this.brickCol
 		this.isGameOver = false
 		this.runningTime = 0
@@ -120,12 +129,10 @@ Game.prototype = {
 	},
 
 	_drawElements: function(ctx) {
-		this.elements.forEach(function(ele, index) {
-			ele.draw()
-		})
-
-		this.bricks.forEach(function(ele, index) {
-			ele.draw()
+		this.elements.concat(this.bricks).forEach(function(ele, index) {
+			if(isFunction(ele.draw)) {
+				ele.draw()
+			}
 		})
 	},
 

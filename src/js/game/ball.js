@@ -21,7 +21,7 @@ var Ball = function(canvas, options) {
 	this.isGameOverDown = false
 	this.gameOverMoveDistance = 0
 	this.gameOverMoveVelocity = 4 * window.ratio
-	this.gameOverTargetDistance = 100 * window.ratio
+	this.gameOverTargetDistance = 80 * window.ratio
 	// 碰撞到触板时，球的横向速度的改变基数
 	this.velocityChangeBase = 1
 

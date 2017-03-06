@@ -6,6 +6,10 @@ function Racket(canvas, options) {
 	this.ctx = canvas.getContext('2d')
 	this.width = options.width
 	this.height = options.height
+	this.shadowOffsetX = 1.5 * window.ratio
+	this.shadowOffsetY = 1.5 * window.ratio
+	this.shadowBlur = 2 * window.ratio
+	this.shadowColor = 'rgba(0,0,0, .5)'
 	this.velocityX = 0
 	this.velocityY = 0
 	this.left = options.left
@@ -13,6 +17,9 @@ function Racket(canvas, options) {
 	this.fillStyle = options.fillStyle || '#fff'
 	this.isDragging = false
 
+	this._mouseDownHandlerPack
+	this._mouseMoveHandlerPack
+	this._mouseUpHandlerPack
 	// init
 	this.init()
 }
@@ -26,10 +33,13 @@ Racket.prototype = {
 		// draw first frame
 		this.draw()
 		// bind touch event
-		canvas.addEventListener('touchstart', self._mouseDownHandler.bind(self), false)
-		canvas.addEventListener('touchmove',  self._mouseMoveHandler.bind(self), false)
-		canvas.addEventListener('touchend',   self._mouseUpHandler.bind(self),   false)
+		this._mouseDownHandlerPack = this._mouseDownHandler.bind(this)
+		this._mouseMoveHandlerPack = this._mouseMoveHandler.bind(this)
+		this._mouseUpHandlerPack = this._mouseUpHandler.bind(this)
 
+		canvas.addEventListener('touchstart', this._mouseDownHandlerPack, false)
+		canvas.addEventListener('touchmove',  this._mouseMoveHandlerPack, false)
+		canvas.addEventListener('touchend',   this._mouseUpHandlerPack,   false)
 	},
 
 	_setPosition: function(left, top) {
@@ -38,10 +48,10 @@ Racket.prototype = {
 	},
 
 	_mouseDownHandler: function(e) {
+		e.preventDefault()
 		var canvas = this.canvas,
 			firstFinger = e.touches[0]
 		// mouse need to times ratio
-		console.log(window.ratio)
 		var canvasMouse = window.windowToCanvas(canvas, 
 			firstFinger.clientX * window.ratio, 
 			firstFinger.clientY * window.ratio)
@@ -57,6 +67,7 @@ Racket.prototype = {
 						y: firstFinger.clientY * window.ratio - this.top
 					};
 				this._mouseMoveHandler.offset = offset
+
 			}
 		} else {
 			this.isDragging = false
@@ -65,6 +76,8 @@ Racket.prototype = {
 	},
 
 	_mouseMoveHandler: function(e) {
+		e.preventDefault()
+
 		if(this.isDragging && !game.isPaused) {
 			var canvas = this.canvas,
 				firstFinger = e.touches[0],
@@ -85,9 +98,16 @@ Racket.prototype = {
 	},
 
 	_mouseUpHandler: function(e) {
+		e.preventDefault()
+		
 		var canvas = this.canvas
-
 		this.isDragging = false
+	},
+
+	destroy: function() {
+		this.canvas.removeEventListener('touchstart', this._mouseDownHandlerPack, false)
+		this.canvas.removeEventListener('touchmove',  this._mouseMoveHandlerPack, false)
+		this.canvas.removeEventListener('touchend',   this._mouseUpHandlerPack,   false)
 	},
 
 	_isPointInShape: function(point) {
@@ -104,14 +124,13 @@ Racket.prototype = {
 
 	draw: function() {
 		var ctx = this.ctx
-
 		ctx.save()
 
 		// set shadow
-		ctx.shadowOffsetX = 3
-		ctx.shadowOffsetY = 3
-		ctx.shadowBlur = 4
-		ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'
+		ctx.shadowOffsetX = this.shadowOffsetX
+		ctx.shadowOffsetY = this.shadowOffsetY
+		ctx.shadowBlur = this.shadowBlur
+		ctx.shadowColor = this.shadowColor
 
 		// bottom semicircle
 		this._getPathOfShape()
