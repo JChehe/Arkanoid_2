@@ -11,6 +11,8 @@ var getFps = require('./utils/fps')
 var detect2RectCollision = require('./utils/detect2RectCollision').detect2RectCollision
 var afterCollised = require('./utils/detect2RectCollision').afterCollised
 
+require('../img/player_on.png')
+require('../img/player_off.png')
 require('../img/thumb1.png')
 require('../img/thumb2.png')
 require('../img/thumb3.png')
@@ -48,6 +50,8 @@ for (var i = 0; i < 25; i++) {
 	imgArr.push(imgPath)
 }
 
+imgArr.push('../img/player_on.png')
+imgArr.push('../img/player_off.png')
 
 
 /**
@@ -65,7 +69,7 @@ preloader.addCompletionListener(function() {
 	$('#o2_main').removeClass('hide')
 
 	game.init()
-	game.start()
+	// game.start()
 
 })
 preloader.start()
@@ -74,14 +78,17 @@ preloader.start()
 
 var canvas = document.getElementById('stage'),
 	ctx = canvas.getContext('2d'),
-	bbox = canvas.getBoundingClientRect();
+	bbox = canvas.getBoundingClientRect(),
+	$gameComplete = $('.game_complete'),
+	$gameSuccessText = $gameComplete.find('.game_success'),
+	$gameFailText = $gameComplete.find('.game_fail');
 
 
 
 
 
 
-window.ratio = canvas.width / bbox.width
+window.ratio = 1// canvas.width / bbox.width
 
 
 function Game() {
@@ -89,6 +96,11 @@ function Game() {
 	this.bricks = []
 	this.racket
 	this.ball
+	this.isPaused = true
+	this.isGameOver = false
+	this.hp = 25
+	this.score = 0
+	this.runingTime = 0
 }
 
 
@@ -96,16 +108,19 @@ Game.prototype = {
 	init: function() {
 		var background = new Background(canvas)
 		var racket = new Racket(canvas)
-		var ball = new Ball(canvas)
+		var ball = new Ball(canvas, {
+			on_imageObj: preloader.get('../img/player_on.png'),
+			off_imageObj: preloader.get('../img/player_off.png')
+		})
 		this.racket = racket
 		this.ball = ball
 		this.elements.push(background)
 		this.elements.push(ball)
 		this.elements.push(racket)
-
-		for(var i = 0; i < 25; i++) {
+		
+		for(var i = 0; i < this.hp; i++) {
 			var left = (i % 5) * (canvas.width / 5),
-				top = Math.floor(i / 5) * 100
+				top = Math.floor(i / 5) * 100 / 2
 			var brick = new Brick({
 				index: i,
 				left: left,
@@ -123,12 +138,23 @@ Game.prototype = {
 
 	start: function() {
 
-
+		this.isPaused = false
+		this.runingTime = +new Date()
 		window.requestAnimationFrame(loop)
 	},
 
 	restart: function() {
+		this.bricks.length = 0
+		this.elements.length = 0
+		this.ball = null
+		this.racket = null
+	},
 
+	pause: function(isPaused) {
+		if(isPaused === undefined) 
+			this.isPaused = true
+		else 
+			this.isPaused = isPaused
 	},
 
 	clearScreen: function(ctx) {
@@ -153,48 +179,119 @@ var lastGameTime = 0,
 	lastFpsTime = 0,
 	fpsDur = 1000,
 	curFps = getFps().toFixed(),
-	displayFps = 0,
-	game = new Game()
+	displayFps = 0;
+
+	window.game = new Game()
 	// tick is requestAnimateFrame 第一次启动是的时间刻。
 function loop(tick) {
-	// ctx.clearRect(0, 0, canvas.width, canvas.height)
-	game.clearScreen(ctx)
+	// console.log(game.isPaused)
+	if(!game.isPaused) {
 
-	var ballAndRacketAngle = detect2RectCollision(game.ball, game.racket)
-	console.log(ballAndRacketAngle)
-	afterCollised(game.ball, game.racket, ballAndRacketAngle)
+		
+		if(!game.ball.isGameOverUp && !game.ball.isGameOverDown) {
+			game.isPaused = true
+			game.isGameOver = true
+
+			$gameComplete.show().addClass('fail')
+			console.log('结束动画完毕')
+			game.runingTime = +new Date() - game.runingTime
+		}
+		if(game.score === game.hp) {
+			game.isGameOver = true
+			game.isPaused = true
+			$gameComplete.show().addClass('success')
+			game.runingTime = +new Date() - game.runingTime
+		}
+
+		// console.log(game.runingTime)
+
+		game.clearScreen(ctx)
+
+		var ballAndRacketAngle = detect2RectCollision(game.ball, game.racket)
+		// afterCollised(game.ball, game.racket, ballAndRacketAngle)
+		if(ballAndRacketAngle !== null) {
+			// console.log(ballAndRacketAngle)
+
+			var ballCenterX = game.ball.left + game.ball.width / 2,
+				racketCenterX = game.racket.left + game.racket.width / 2,
+				distanceOfcenterX = ballCenterX - racketCenterX;
+
+			game.ball.changeVelocityX(distanceOfcenterX)
+
+			// game.ball.velocityX = -game.ball.velocityX
+			game.ball.velocityY = -game.ball.velocityY
+		}
+
+		for(var i = 0, len = game.bricks.length; i < len; i++) {
+			var curBrick = game.bricks[i]
+			if(curBrick.isVisible) {
+
+				var ballAndBrickAngle = detect2RectCollision(curBrick, game.ball)
+				// console.log(ballAndBrickAngle)
+				if(ballAndBrickAngle !== null) {
+					afterCollised(curBrick, game.ball, ballAndBrickAngle)
+					game.score++
+					curBrick.isVisible = false
+				}
+			}
+		}
 
 
-	/*for(var i = 0, len = game.bricks.length; i < len; i++) {
-		var curBrick = game.bricks[i]
-		var ballAndBrickAngle = detect2RectCollision(curBrick, game.ball)
-		// console.log(ballAndBrickAngle)
-		afterCollised(curBrick, game.ball, ballAndBrickAngle)
-	}*/
+		game.elements.forEach(function(ele, index) {
+			ele.draw()
+		})
 
+		game.bricks.forEach(function(ele, index) {
+			ele.draw()
+		})
+		
+		// getFps
+		fps = getFps(tick, lastGameTime)
 
+		// update display fps per second
+		if (tick - lastFpsTime >= fpsDur) {
+			displayFps = fps.toFixed()
+			lastFpsTime = tick
+		}
 
-	game.elements.forEach(function(ele, index) {
-		ele.draw()
-	})
-
-	game.bricks.forEach(function(ele, index) {
-		ele.draw()
-	})
-	
-	// getFps
-	fps = getFps(tick, lastGameTime)
-
-	// update display fps per second
-	if (tick - lastFpsTime >= fpsDur) {
-		displayFps = fps.toFixed()
-		lastFpsTime = tick
+		lastGameTime = tick
+		drawFPS(ctx, displayFps)
 	}
-
-	lastGameTime = tick
-	drawFPS(ctx, displayFps)
+	
 	window.requestAnimationFrame(loop)
 }
 
+$('.pause_btn').on('click', function(e) {
+	gamePauseHandle(!game.isPaused)
+})
+
+function gamePauseHandle(isPaused) {
+	$('.pause_btn').text(isPaused ? '开始' : '暂停')
+	// console.log(isPaused)
+	game.pause(isPaused)
+}
 
 
+$('.start_btn').on('click', function(e) {
+	$('.game_start').hide()
+	$('#stage').show()
+	$('.fixed_bottom').show()
+	// window.requestAnimationFrame(loop)
+
+	game.start()
+	gamePauseHandle(game.isPaused)
+})
+
+$('.play_again').on('click', function(e) {
+	game.ball.isGameOver = false
+	game.ball.isGameOverUp = true
+	game.ball.isGameOverDown = false
+	game.runingTime = 0
+	game.isGameOver = false
+	game.isPaused = false
+	game.score = 0
+	$gameComplete.hide()
+
+	game.restart()
+	game.init()
+})

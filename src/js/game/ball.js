@@ -1,3 +1,5 @@
+var getRandomNumber = require('../utils/getRandomNumber')
+
 var Ball = function(canvas, options) {
 	if(canvas === undefined) throw 'Ball 的传参有问题'
 	if(options === undefined) options = {}
@@ -5,13 +7,15 @@ var Ball = function(canvas, options) {
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
 	this.left = options.left || 0
-	this.top = options.top || 600
+	this.top = options.top || 600 / 2
 	this.width = options.width || 32
 	this.height = options.height || 29
-	this.velocityX = options.velocityX || 2
-	this.velocityY = options.velocityY || 2
+	this.velocityX = options.velocityX || getRandomNumber(2, 5)
+	this.velocityY = options.velocityY || getRandomNumber(2, 5)
 	this.fillStyle = options.fillStyle || 'orange'
 	this.isRunning = false
+	this.on_imageObj = options.on_imageObj
+	this.off_imageObj = options.off_imageObj
 
 	// this.gameOverUpDistance = 50
 	this.isGameOver = false
@@ -19,6 +23,9 @@ var Ball = function(canvas, options) {
 	this.isGameOverDown = false
 	this.gameOverMoveDistance = 0
 	this.gameOverMoveVelocity = 4
+
+	// 碰撞到触板时，球的横向速度的改变基数
+	this.velocityChangeBase = 2
 
 	this.init()
 }
@@ -37,8 +44,17 @@ Ball.prototype = {
 		this._run()
 
 		ctx.save()
-		ctx.fillStyle = this.fillStyle
-		ctx.fillRect(this.left, this.top, this.width, this.height)
+		// ctx.fillStyle = this.fillStyle
+		// ctx.fillRect(this.left, this.top, this.width, this.height)
+
+		ctx.rect(this.left, this.top, this.width, this.height)
+		ctx.clip()
+		if(!this.isGameOver) {
+			ctx.drawImage(this.on_imageObj, this.left, this.top, this.width, this.height)
+		} else {
+			ctx.drawImage(this.off_imageObj, this.left, this.top, this.width, this.height)
+		}
+
 		ctx.restore()
 	},
 
@@ -58,6 +74,17 @@ Ball.prototype = {
 
 		if(this.isGameOver) {
 			this._gameOverMotion()
+		}
+
+	},
+
+	changeVelocityX: function(distanceOfcenterX) {
+		var velocityXIncrement = this.velocityChangeBase * (distanceOfcenterX / (game.racket.width / 2))
+
+		if(this.velocityX >= 0) {
+			this.velocityX += velocityXIncrement
+		} else {
+			this.velocityX -= velocityXIncrement
 		}
 
 	},

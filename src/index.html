@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
   <meta name="format-detection" content="telephone=no">
-  <title>ELF Base Template</title>
+  <title>打砖块游戏</title>
 
   <!-- 不要删除或改变下面这行代码 -->
   {{{__HEAD_JAVASCRIPT__}}}
@@ -24,15 +24,26 @@
   <!-- end loading -->
   <!-- begin 主体内容 -->
   <div id="o2_main" class="main hide">
-    <canvas id="stage" width="750" height="1334">
+    <canvas id="stage" width="375" height="667">
       
     </canvas>
-    <div class="fixed_bottom">
+    <div class="game_start">
+      <h1>打砖块拯救女神</h1>
+      <button class="start_btn" type="button">我已饥渴难耐</button>
+    </div>
+    <div class="game_complete ">
+      <h2 class="game_success">恭喜你，拯救女神成功</h2>
+      <h2 class="game_fail">差一点点，女神再召唤你</h2>
+      <button type="button" class="play_again">再玩一次</button>
+    </div>
+    <div class="game_intro fixed_bottom">
       <h3>玩法介绍</h3>
       <ol>
         <li>左右拖拽移动月台</li>
         <li>blablabla...</li>
       </ol>
+
+      <button class="pause_btn">暂停</button>
     </div>
   </div>
   <!-- end 主体内容 -->

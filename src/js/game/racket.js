@@ -1,16 +1,15 @@
 // 挡板
-
 function Racket(canvas, options) {
 	if(canvas === undefined)  throw 'racket 参数有问题'
 	if(options === undefined) options = {}
 	this.canvas = canvas
 	this.ctx = canvas.getContext('2d')
-	this.width = 240
-	this.height = 120 / 2
+	this.width = 240 / 2
+	this.height = 120 / 2 / 2
 	this.velocityX = 0
 	this.velocityY = 0
 	this.left = options.left || (canvas.width - this.width) / 2
-	this.top  = options.top || 467 * 2
+	this.top  = options.top || 467 * 2 / 2
 	this.fillStyle = options.fillStyle || '#fff'
 	this.isDragging = false
 
@@ -24,10 +23,8 @@ Racket.prototype = {
 		var canvas = this.canvas,
 			ctx = this.ctx,
 			self = this
-
 		// draw first frame
 		this.draw()
-
 		// bind touch event
 		canvas.addEventListener('touchstart', self._mouseDownHandler.bind(self), false)
 		canvas.addEventListener('touchmove',  self._mouseMoveHandler.bind(self), false)
@@ -44,6 +41,7 @@ Racket.prototype = {
 		var canvas = this.canvas,
 			firstFinger = e.touches[0]
 		// mouse need to times ratio
+		console.log(window.ratio)
 		var canvasMouse = window.windowToCanvas(canvas, firstFinger.clientX * window.ratio, firstFinger.clientY * window.ratio)
 
 		if(this._isPointInShape(canvasMouse)) {
@@ -67,7 +65,7 @@ Racket.prototype = {
 
 	_mouseMoveHandler: function(e) {
 		console.log('move')
-		if(this.isDragging) {
+		if(this.isDragging && !game.isPaused) {
 			var canvas = this.canvas,
 				firstFinger = e.touches[0],
 				offset = this._mouseMoveHandler.offset,
@@ -76,8 +74,8 @@ Racket.prototype = {
 			var left = canvasMouse.x - offset.x,
 				top = canvasMouse.y - offset.y
 
-			if(left < 0) left = 0
-			if(left > canvas.width - this.width) left = canvas.width - this.width
+			// if(left < 0) left = 0
+			// if(left > canvas.width - this.width) left = canvas.width - this.width
 			this._setPosition(left, top)
 		}
 	},
@@ -97,6 +95,7 @@ Racket.prototype = {
 	_getPathOfShape: function() {
 		this.ctx.beginPath()
 		this.ctx.arc(this.left + this.width / 2, this.top, this.width / 2, 0, Math.PI, false)
+		// this.ctx.fillRect(this.left, this.top, this.width, this.height)
 		this.ctx.closePath()
 	},
 
