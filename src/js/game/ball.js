@@ -11,12 +11,12 @@ var Ball = function(canvas, options) {
 	this.top = options.top
 	this.width = options.width
 	this.height = options.height
-	this.velocityX = options.velocityX || getRandomNumber(-2, -5)
-	this.velocityY = options.velocityY || getRandomNumber(2, 5)
+	this.velocityX = options.velocityX || getRandomNumber(-1, -3) * window.ratio
+	this.velocityY = options.velocityY || getRandomNumber(1, 3) * window.ratio
 	this.fillStyle = options.fillStyle || 'orange'
 	this.isRunning = false
-	this.on_imageObj = options.on_imageObj
-	this.off_imageObj = options.off_imageObj
+	this.imageObj = options.imageObj
+	// this.off_imageObj = options.off_imageObj
 	this.isAbleCollisionWithRacket = true
 	this.isGameOverUp = true
 	this.isGameOverDown = false
@@ -25,6 +25,17 @@ var Ball = function(canvas, options) {
 	this.gameOverTargetDistance = 80 * window.ratio
 	// 碰撞到触板时，球的横向速度的改变基数
 	this.velocityChangeBase = 1
+
+
+	this.isCache = options.isCache || false
+	this.cacheCanvas = document.createElement('canvas')
+	this.cacheCtx = this.cacheCanvas.getContext('2d')
+	this.cacheCanvas.width = this.imageObj.width
+	this.cacheCanvas.height = this.imageObj.height
+
+	if(this.isCache) {
+		this._cache()
+	}
 
 	this.init()
 }
@@ -35,21 +46,35 @@ Ball.prototype = {
 		this.isRunning = true
 	},
 
+	_cache: function() {
+		var cacheCtx = this.cacheCtx
+		cacheCtx.save()
+		cacheCtx.drawImage(this.imageObj, 0, 0)
+		cacheCtx.restore()
+	},
+
 	draw: function() {
-		var ctx = this.ctx,
-			canvas = this.canvas;
+		var ctx = this.ctx
 
 		this._run()
 
-		ctx.save()
-		ctx.rect(this.left, this.top, this.width, this.height)
-		ctx.clip()
-		if(!window.game.isGameOver) {
-			ctx.drawImage(this.on_imageObj, this.left, this.top, this.width, this.height)
+		if(this.isCache) {
+			this._gameFailMove(this.cacheCanvas)
 		} else {
-			ctx.drawImage(this.off_imageObj, this.left, this.top, this.width, this.height)
+			this._gameFailMove(this.imageObj)
 		}
+	},
 
+	_gameFailMove: function(canvas) {
+		var ctx = this.ctx
+		ctx.save()
+		if(!window.game.isGameOver) {
+			ctx.drawImage(canvas, 0, 0, this.imageObj.width / 2, this.imageObj.height, 
+										this.left, this.top, this.width, this.height)
+		} else {
+			ctx.drawImage(canvas, this.imageObj.width / 2, 0, this.imageObj.width / 2, this.imageObj.height, 
+										this.left, this.top, this.width, this.height)
+		}
 		ctx.restore()
 	},
 

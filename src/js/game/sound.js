@@ -11,7 +11,8 @@ var Sound = function() {
 			game_fail: [2180, 1500],
 			ready_go: [3600, 2080],
 			game_success: [5800, 3500]
-		}
+		},
+		volume: 0.6
 	})
 
 	// this.game_success()

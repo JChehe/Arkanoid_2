@@ -1,8 +1,8 @@
 require('../index.html')
 require('../css/main.scss')
-
 require('./utils/requestAnimationFrame')
 require('./utils/windowToCanvas')
+
 var Background = require('./game/background')
 var Racket = require('./game/racket')
 var Brick = require('./game/brick.js')
@@ -12,21 +12,27 @@ var getFps = require('./utils/fps')
 var isFunction = require('./utils/isfunction')
 var detect2RectCollision = require('./utils/detect2RectCollision').detect2RectCollision
 var afterCollised = require('./utils/detect2RectCollision').afterCollised
-var isOnTopHalfZone = require('./utils/detect2RectCollision').isOnTopHalfZone
-var isOneLeftRightZone = require('./utils/detect2RectCollision').isOneLeftRightZone
 var preloader = require('./game/preload')
 var sound = require('./game/sound')
 
 
 
 window.ratio = window.devicePixelRatio || 1;
+if(window.ratio > 2) window.ratio = 2
+
 
 var canvas = document.getElementById('stage'),
 	ctx = canvas.getContext('2d'),
-	bbox = canvas.getBoundingClientRect();
+	bbox = canvas.getBoundingClientRect(),
+	bg_canvas = document.getElementById('stage_bg');
 
-canvas.width = 375 * ratio
-canvas.height = (1334 - 96) / 2 * ratio
+
+var WX_TOPBAR_HEIGHT = 48, // ratio:2时
+	IPHONE6_WIDTH = 375,
+	IPHONE6_HEIGHT = 667;
+
+canvas.width = bg_canvas.width = IPHONE6_WIDTH * ratio
+canvas.height = bg_canvas.height = (IPHONE6_HEIGHT - WX_TOPBAR_HEIGHT) * ratio
 
 
 function Game() {
@@ -38,51 +44,70 @@ function Game() {
 	this.isGameOver = false
 	this.score = 0
 	this.runningTime = 0
-	this.brickRow = 5
-	this.brickCol = 5
-	this.hp = this.brickRow * this.brickCol
+	
+	this.hp = this.BRICK_ROW * this.BRICK_COL
 	this.isFpsVisible = true
 	this.lastGameTime = 0
 	this.lastFpsTime = 0
-	this.fpsDur = 1000
+	this.FPS_DUR = 1000
 	this.displayFps = 60
 	this.restartCount = 0
+
+	// 以下参数以 ratio = 1 时
+	this.RACKET_WIDTH = 120
+	this.RACKET_HEIGHT = 30
+	this.RACKET_TOP = 467
+
+	this.BALL_WIDTH = 32
+	this.BALL_HEIGHT = 29
+	this.BALL_INIT_LEFT = 300
+	this.BALL_INIT_TOP = 300
+
+	this.WELFARE_WIDTH = canvas.width * (160 / 375) // 约为 0.42 倍 canvas 宽
+	this.WELFARE_TOP = 13
+	this.WELFARE_LEFT = (canvas.width - this.WELFARE_WIDTH) / 2
+
+	this.BRICK_ROW = 5
+	this.BRICK_COL = 5
+	this.BRICK_WIDTH = canvas.width / this.BRICK_COL
+	this.BRICK_HEIGHT = 50  * ratio
 }
 
 Game.prototype = {
 	init: function() {
-		var background = new Background(canvas)
+		var background = new Background(bg_canvas)
+		background.draw()
 		var racket = new Racket(canvas, {
-			width: 120 * ratio,
-			height: 30 * ratio,
-			top: 467 * ratio,
-			left: (canvas.width - 120 * ratio) / 2
+			width: this.RACKET_WIDTH * ratio,
+			height: this.RACKET_HEIGHT * ratio,
+			top: this.RACKET_TOP * ratio,
+			left: (canvas.width - this.RACKET_WIDTH * ratio) / 2
 		})
 		var ball = new Ball(canvas, {
-			on_imageObj: preloader.get('../../img/player_on.png'),
-			off_imageObj: preloader.get('../../img/player_off.png'),
-			width: 32 * ratio,
-			height: 29 * ratio,
-			left: 300 * ratio,
-			top: 300 * ratio
+			imageObj: preloader.get('../../img/player_sprite.png'),
+			// off_imageObj: preloader.get('../../img/player_off.png'),
+			width: this.BALL_WIDTH * ratio,
+			height: this.BALL_HEIGHT * ratio,
+			left: this.BALL_INIT_LEFT * ratio,
+			top: this.BALL_INIT_TOP * ratio
 		})
 
 		var welfareImageObj = preloader.get('../../img/welfare.png'),
-			welfareWidth = canvas.width * (160 / 375) // 约为 0.42 倍 canvas 宽
+			welfareHeight = this.WELFARE_WIDTH * (welfareImageObj.height / welfareImageObj.width)
 
 		var welfare = new Welfare(canvas, {
-			left: (canvas.width - welfareWidth) / 2,
-			top: 13 * ratio,
-			width: welfareWidth,
-			height: welfareWidth * (welfareImageObj.height / welfareImageObj.width),
-			increaseLevel: 1 / (this.brickRow * this.brickCol),
+			left: this.WELFARE_LEFT,
+			top: this.WELFARE_TOP * ratio,
+			width: this.WELFARE_WIDTH,
+			height: welfareHeight,
+			increaseLevel: 1 / (this.BRICK_ROW * this.BRICK_COL),
 			imageObj: welfareImageObj
 		})
 
 		this.racket = racket
 		this.ball = ball
 		this.welfare = welfare
-		this.elements.push(background)
+		// this.elements.push(background)
 		this.elements.push(welfare)
 		this.elements.push(racket)
 		this.elements.push(ball)
@@ -90,6 +115,7 @@ Game.prototype = {
 
 	},
 	drawFirstFrame: function() {
+		this._clearScreen(ctx)
 		this._drawElements()
 	},
 
@@ -109,10 +135,10 @@ Game.prototype = {
 		})
 
 		this.restartCount++
-		this.hp = this.brickRow * this.brickCol
+		this.hp = this.BRICK_ROW * this.BRICK_COL
 		this.isGameOver = false
-		this.runningTime = 0
 		this.isPaused = true
+		this.runningTime = 0
 		this.score = 0
 		this.bricks.length = 0
 		this.elements.length = 0
@@ -121,12 +147,12 @@ Game.prototype = {
 
 		this.init()
 		this.drawFirstFrame()
-		
-		sound.ready_go()
+
 		setTimeout(function() {
 			self.isPaused = false
 		}, 1880)
 		
+		sound.ready_go()
 	},
 
 	pause: function(isPaused) {
@@ -160,25 +186,33 @@ Game.prototype = {
 
 	_initBricks: function() {
 		var index = 0
-		for(var i = 0; i < this.brickRow; i++) {
-			for(var j = 0; j < this.brickCol; j++) {
-				var left = j * canvas.width / this.brickCol,
-					top = i * 50 * ratio;
+		var source = preloader.get('../../img/bricks.png')
+		for(var i = 0, iLen = this.BRICK_ROW; i < iLen; i++) {
+			for(var j = 0, jLen = this.BRICK_COL; j < jLen; j++) {
+				var left = j * this.BRICK_WIDTH,
+					top = i * this.BRICK_HEIGHT;
 
 				var brick = new Brick({
 					index: index,
 					left: left,
 					top: top,
-					width: canvas.width / this.brickCol,
-					height: 50 * ratio,
-					imageObj: preloader.get('../../img/thumb' + (index + 1) + '.png')
+					width: this.BRICK_WIDTH,
+					height: this.BRICK_HEIGHT,
+					sourceWidth: source.width,
+					sourceHeight: source.height,
+					sourceSliceTop: (i / this.BRICK_COL) * source.height,
+					sourceSliceLeft: (j / this.BRICK_ROW) * source.width,
+					sourceSliceWidth: source.width / this.BRICK_COL,
+					sourceSliceHeight: source.height / this.BRICK_ROW,
 				}, canvas)
 
 				this.bricks.push(brick)
 				index++
 			}
 		}
-		this.detectBrickCollideBoundary = (this.brickRow + 1) * this.bricks[0].height
+
+		this.bricks[0].init(source)
+		this.detectBrickCollideBoundary = (this.BRICK_ROW + 1) * this.bricks[0].height
 	},
 
 	// Game Over 含两种情况：① 中途挂了 ② 通过
@@ -221,7 +255,7 @@ Game.prototype = {
 			// getFps
 			var fps = getFps(tick, this.lastGameTime)
 			// update display fps per second
-			if (tick - this.lastFpsTime >= this.fpsDur) {
+			if (tick - this.lastFpsTime >= this.FPS_DUR) {
 				this.displayFps = fps.toFixed()
 				this.lastFpsTime = tick
 			}
@@ -305,22 +339,25 @@ var $gameComplete = $('.game_complete'),
 	$gameFailText = $gameComplete.find('.game_fail'),
 	$playAgainBtn = $('.play_again'),
 	$startBtn = $('.start_btn'),
-	$pauseBtn = $('.pause_btn');
+	$pauseBtn = $('.pause_btn'),
+	$gameStartPage = $('.game_start'),
+	$stage = $('#stage'),
+	$gameInfo = $('.game_info');
 
 $pauseBtn.on('click', function(e) {
 	gamePauseHandle(!game.isPaused)
 })
 
 $startBtn.on('click', function(e) {
-	$('.game_start').hide()
-	$('#stage').show()
+	$gameStartPage.hide()
+	$stage.show()
 	
 
 	game.drawFirstFrame()
 	setTimeout(function() {
 		game.start()
 		gamePauseHandle(game.isPaused)
-		$('.fixed_bottom').show()
+		$gameInfo.show()
 	}, 1880)
 	
 
@@ -328,7 +365,7 @@ $startBtn.on('click', function(e) {
 })
 
 function gamePauseHandle(isPaused) {
-	$('.pause_btn').text(isPaused ? '开始' : '暂停')
+	$pauseBtn.text(isPaused ? '开始' : '暂停')
 	game.pause(isPaused)
 }
 

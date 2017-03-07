@@ -1,3 +1,5 @@
+// 游戏背景
+
 function Background(canvas, options) {
 	if(canvas === undefined)  throw 'Background 参数有问题'
 	if(options === undefined) options = {} 
@@ -9,8 +11,8 @@ function Background(canvas, options) {
 
 Background.prototype = {
 	draw: function() {
-		var ctx = this.ctx
-		var canvas = this.canvas
+		var ctx = this.ctx,
+			canvas = this.canvas
 
 		ctx.save()
 		ctx.fillStyle = this.fillStyle
