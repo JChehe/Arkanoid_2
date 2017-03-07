@@ -1,4 +1,5 @@
 var getRandomNumber = require('../utils/getRandomNumber')
+var sound = require('./sound')
 
 var Ball = function(canvas, options) {
 	if(canvas === undefined) throw 'Ball 的传参有问题'
@@ -67,6 +68,7 @@ Ball.prototype = {
 		} 
 
 		if(window.game.isGameOver) {
+
 			this._gameOverMotion()
 		}
 	},
@@ -92,21 +94,26 @@ Ball.prototype = {
 			this.velocityX = -this.velocityX
 			this.left = 0
 			game.ball.isAbleCollisionWithRacket = true
+			sound.wall()
 		} else if(left + width >= canvas.width) {
 			this.velocityX = -this.velocityX
 			this.left = canvas.width - width
 			game.ball.isAbleCollisionWithRacket = true
+			sound.wall()
 		}
 		if(top < 0) {
 			this.velocityY = -this.velocityY
 			this.top = 0
 			game.ball.isAbleCollisionWithRacket = true
+			sound.wall()
 		}
 
 		if(top + height > canvas.height) {
 			console.log('game over')
 			this.isRunning = false
 			window.game.isGameOver = true
+			sound.game_fail()
+
 		}
 	},
 

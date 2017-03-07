@@ -15,7 +15,7 @@ var afterCollised = require('./utils/detect2RectCollision').afterCollised
 var isOnTopHalfZone = require('./utils/detect2RectCollision').isOnTopHalfZone
 var isOneLeftRightZone = require('./utils/detect2RectCollision').isOneLeftRightZone
 var preloader = require('./game/preload')
-
+var sound = require('./game/sound')
 
 
 
@@ -89,14 +89,19 @@ Game.prototype = {
 		this._initBricks()
 
 	},
+	drawFirstFrame: function() {
+		this._drawElements()
+	},
 
 	start: function() {
+
 		this.isPaused = false
 		this.runningTime = +new Date()
 		window.requestAnimationFrame(this._loop.bind(this))
 	},
 
 	restart: function() {
+		var self = this
 		this.elements.concat(this.bricks).forEach(function(ele) {
 			if(isFunction(ele.destroy)) {
 				ele.destroy()
@@ -107,7 +112,7 @@ Game.prototype = {
 		this.hp = this.brickRow * this.brickCol
 		this.isGameOver = false
 		this.runningTime = 0
-		this.isPaused = false
+		this.isPaused = true
 		this.score = 0
 		this.bricks.length = 0
 		this.elements.length = 0
@@ -115,6 +120,13 @@ Game.prototype = {
 		this.racket = null
 
 		this.init()
+		this.drawFirstFrame()
+		
+		sound.ready_go()
+		setTimeout(function() {
+			self.isPaused = false
+		}, 1880)
+		
 	},
 
 	pause: function(isPaused) {
@@ -186,6 +198,8 @@ Game.prototype = {
 			$gameComplete.show().addClass('success')
 			game.runningTime = +new Date() - game.runningTime
 			console.log('游戏持续时间：' + game.runningTime / 1000 + '秒')
+
+			sound.game_success()
 		}
 	},
 
@@ -260,6 +274,8 @@ function detectRacketAndBallCollide() {
 			game.ball.changeVelocityX(distanceOfcenterX)
 			game.ball.velocityY = -game.ball.velocityY
 		}
+
+		sound.wall()
 	}
 }
 
@@ -274,6 +290,8 @@ function detectBricksAndBallCollide() {
 				game.score++
 				game.welfare.increaseOpacity()
 				curBrick.isVisible = false
+
+				sound.brick()
 			}
 		}
 	}
@@ -296,9 +314,17 @@ $pauseBtn.on('click', function(e) {
 $startBtn.on('click', function(e) {
 	$('.game_start').hide()
 	$('#stage').show()
-	$('.fixed_bottom').show()
-	game.start()
-	gamePauseHandle(game.isPaused)
+	
+
+	game.drawFirstFrame()
+	setTimeout(function() {
+		game.start()
+		gamePauseHandle(game.isPaused)
+		$('.fixed_bottom').show()
+	}, 1880)
+	
+
+	sound.ready_go()
 })
 
 function gamePauseHandle(isPaused) {

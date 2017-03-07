@@ -32,28 +32,28 @@ require('../../img/thumb25.png')
 
 
 
-var imgArr = []
+var resources = []
 
 for (var i = 0; i < 25; i++) {
 	var imgPath = '../../img/thumb' + (i + 1) + '.png'
-	imgArr.push(imgPath)
+	resources.push(imgPath)
 }
 
-imgArr.push('../../img/player_on.png')
-imgArr.push('../../img/player_off.png')
-imgArr.push('../../img/welfare.png')
+resources.push('../../img/player_on.png')
+resources.push('../../img/player_off.png')
+resources.push('../../img/welfare.png')
 
 
 /**
  * preloader && start
  */
 var preloader = new Preloader({
-	resources: imgArr,
+	resources: resources,
 	concurrency: 10,
 	perMinTime: 500
 })
 preloader.addProgressListener(function(loaded, length) {
-	console.log('loaded', loaded, length, loaded / length)
+	// console.log('loaded', loaded, length, loaded / length)
 })
 preloader.addCompletionListener(function() {
 	$('#o2_loading').remove()
