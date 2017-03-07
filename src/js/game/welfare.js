@@ -33,7 +33,7 @@ Welfare.prototype = {
 	},
 
 	increaseOpacity: function() {
-		// this.opacity += this.increaseLevel
+		this.opacity += this.increaseLevel
 	}
 }
 
