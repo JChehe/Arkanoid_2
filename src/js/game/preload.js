@@ -22,8 +22,7 @@ resources.push('../../img/welfare.png')
  */
 var preloader = new Preloader({
 	resources: resources,
-	concurrency: 6,
-	perMinTime: 200
+	concurrency: 6
 })
 preloader.addProgressListener(function(loaded, length) {
 	// console.log('loaded', loaded, length, loaded / length)
