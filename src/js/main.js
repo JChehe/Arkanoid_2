@@ -14,6 +14,8 @@ var detect2RectCollision = require('./utils/detect2RectCollision').detect2RectCo
 var afterCollised = require('./utils/detect2RectCollision').afterCollised
 var preloader = require('./game/preload')
 var sound = require('./game/sound')
+var Polygon = require('./utils/sat/polygon').Polygon
+var Vector = require('./utils/sat/vector')
 
 
 
@@ -45,7 +47,6 @@ function Game() {
 	this.score = 0
 	this.runningTime = 0
 	
-	this.hp = this.BRICK_ROW * this.BRICK_COL
 	this.isFpsVisible = true
 	this.lastGameTime = 0
 	this.lastFpsTime = 0
@@ -54,7 +55,7 @@ function Game() {
 	this.restartCount = 0
 
 	// 以下参数以 ratio = 1 时
-	this.RACKET_WIDTH = 120
+	this.RACKET_WIDTH = 300
 	this.RACKET_HEIGHT = 30
 	this.RACKET_TOP = 467
 
@@ -71,6 +72,8 @@ function Game() {
 	this.BRICK_COL = 5
 	this.BRICK_WIDTH = canvas.width / this.BRICK_COL
 	this.BRICK_HEIGHT = 50  * ratio
+
+	this.hp = this.BRICK_ROW * this.BRICK_COL
 }
 
 Game.prototype = {
@@ -113,14 +116,31 @@ Game.prototype = {
 		this.elements.push(ball)
 		this._initBricks()
 
+
+
+		this._initMTDShapes(ball)
+		this._initMTDShapes(racket)
 	},
+
+	_initMTDShapes: function(shape) {
+		var polygon = new Polygon(),
+			points = shape.vertexs
+
+		// console.log(points)
+		points.forEach(function(point) {
+			polygon.addPoint(point.x, point.y)
+		})
+
+		shape.MTDShapes = polygon
+	},
+
+
 	drawFirstFrame: function() {
 		this._clearScreen(ctx)
 		this._drawElements()
 	},
 
 	start: function() {
-
 		this.isPaused = false
 		this.runningTime = +new Date()
 		window.requestAnimationFrame(this._loop.bind(this))
@@ -243,7 +263,7 @@ Game.prototype = {
 			this._clearScreen(ctx)
 
 			if(this.ball.isAbleCollisionWithRacket) {
-				detectRacketAndBallCollide()
+				detectCollisions(this.ball.MTDShapes, this.racket.MTDShapes)
 			}
 
 			if(this.ball.top < this.detectBrickCollideBoundary) {
@@ -272,7 +292,7 @@ Game.prototype = {
 
 window.game = new Game();
 
-
+/*
 function detectRacketAndBallCollide() {
 	var ballAndRacketAngle = detect2RectCollision(game.ball, game.racket)
 	
@@ -311,7 +331,7 @@ function detectRacketAndBallCollide() {
 
 		sound.wall()
 	}
-}
+}*/
 
 function detectBricksAndBallCollide() {
 	for(var i = 0, len = game.bricks.length; i < len; i++) {
@@ -329,6 +349,51 @@ function detectBricksAndBallCollide() {
 			}
 		}
 	}
+}
+
+function detectCollisions(polygon1, polygon2) {
+	if(polygon1.collidesWith(polygon2)) {
+			console.log('碰撞')
+			game.ball.isAbleCollisionWithRacket = false
+			collisionHandle()
+			sound.wall()
+	}
+}
+
+
+function collisionHandle() {
+	var racketAngleOfDeg = game.racket.angleOfDeg
+
+	var racketVector = new Vector({
+		x: game.racket.vertexs[1].x - game.racket.vertexs[0].x,
+		y: game.racket.vertexs[1].y - game.racket.vertexs[0].y
+	})
+/*	console.log({
+		x: game.racket.vertexs[1].x - game.racket.vertexs[0].x,
+		y: game.racket.vertexs[1].y - game.racket.vertexs[0].y
+	})*/
+	var ballVector = new Vector({
+		x: game.ball.velocityX,
+		y: game.ball.velocityY
+	})
+
+	var cosOfTwo = racketVector.dotProduct(ballVector) 
+									/ (racketVector.getMagnitude() * ballVector.getMagnitude())
+
+
+	var angleOfTwo = Math.acos(cosOfTwo) * (180 / Math.PI)
+
+	// console.log('angleOfTwo', angleOfTwo)
+	var angleOfFinal = angleOfTwo
+	var ballVectorLength = ballVector.getMagnitude()
+
+	var newVelocityY = Math.sin(angleOfFinal * (Math.PI / 180)) * ballVectorLength
+	var newVelocityX = Math.cos(angleOfFinal * (Math.PI / 180)) * ballVectorLength
+
+	game.ball.changeVelocity(newVelocityX, newVelocityY, angleOfFinal)
+
+	// console.log(newVelocityX)
+	// console.log(newVelocityY)
 }
 
 
@@ -357,7 +422,7 @@ $startBtn.on('click', function(e) {
 	setTimeout(function() {
 		game.start()
 		gamePauseHandle(game.isPaused)
-		$gameInfo.show()
+		// $gameInfo.show()
 	}, 1880)
 	
 

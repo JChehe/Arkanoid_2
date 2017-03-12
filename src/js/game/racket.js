@@ -1,4 +1,201 @@
 // 挡板
+
+var rotatePoint = require('../utils/rotatePoint').rotatePoint
+var degToRad = require('../utils/rotatePoint').degToRad
+
+function Racket(canvas, options) {
+	if(canvas === undefined)  throw 'racket 参数有问题'
+	if(options === undefined) options = {}
+
+	this.canvas = canvas
+	this.ctx = canvas.getContext('2d')
+	this.width = options.width
+	this.height = options.height
+	this.centerX = canvas.width / 2
+	this.centerY = canvas.height * (4 / 5)
+	this.fillStyle = '#fff'
+	this.angleOfDeg = 0
+	this.vertexs = []
+	this.isChangeAngle = true
+	this.MTDShapes = null
+	this.MAX_LEFT_ANGLE = -30
+	this.MAX_RIGHT_ANGLE = 30
+
+	this.$controlLeft = document.querySelector('.control_racket .left')
+	this.$controlRight = document.querySelector('.control_racket .right')
+	this.clickControlLeftHandlePack
+	this.clickControlRightHandlePack
+
+	this.initVertexs()
+	this.init()
+
+}
+
+Racket.prototype = {
+	init: function() {
+		this.clickControlLeftHandlePack = this.clickControlLeftHandle.bind(this)
+		this.clickControlRightHandlePack = this.clickControlRightHandle.bind(this)
+
+		this.$controlLeft.addEventListener('touchstart', this.clickControlLeftHandlePack, false)
+		this.$controlRight.addEventListener('touchstart', this.clickControlRightHandlePack, false)
+	},
+
+	clickControlLeftHandle: function(e) {
+		e.preventDefault()
+		this.angleOfDeg -= 2
+		if(this.angleOfDeg < this.MAX_LEFT_ANGLE) {
+			this.angleOfDeg = this.MAX_LEFT_ANGLE
+		}
+		this.isChangeAngle = true
+	},
+	clickControlRightHandle: function(e) {
+		e.preventDefault()
+		this.angleOfDeg += 2
+		if(this.angleOfDeg > this.MAX_RIGHT_ANGLE) {
+			this.angleOfDeg = this.MAX_RIGHT_ANGLE
+		}
+		this.isChangeAngle = true
+	},
+
+	draw: function() {
+		var ctx = this.ctx
+
+		this.getPathOfShape()
+		ctx.save()
+		ctx.fillStyle = this.fillStyle
+		ctx.fill()
+		ctx.restore()
+	},
+
+	initVertexs: function() {
+		var angleOfDeg = this.angleOfDeg,
+			centerX = this.centerX,
+			centerY = this.centerY,
+			width = this.width,
+			height = this.height,
+			angleOfRad = degToRad(this.angleOfDeg)
+		var leftTop = [centerX - width / 2,
+									centerY - height / 2],
+				rightTop = [centerX + width / 2,
+										centerY - height / 2],
+				rightBottom = [centerX + width / 2,
+											centerY + height /2],
+				leftBottom = [centerX - width / 2,
+											centerY + height / 2];
+		this.vertexs.length = 0
+
+		var rotateLeftTop = rotatePoint([centerX, centerY],
+										leftTop, angleOfRad),
+				rotateRightTop = rotatePoint([centerX, centerY],
+										rightTop, angleOfRad),
+				rotateRightBottom = rotatePoint([centerX, centerY],
+										rightBottom, angleOfRad),
+				rotateLeftBottom = rotatePoint([centerX, centerY],
+										leftBottom, angleOfRad);
+
+		this.vertexs.length = 0
+		this.vertexs.push(rotateLeftTop)
+		this.vertexs.push(rotateRightTop)
+		this.vertexs.push(rotateRightBottom)
+		this.vertexs.push(rotateLeftBottom)
+	},
+
+	getPathOfShape: function() {
+		var ctx = this.ctx
+
+		if(this.isChangeAngle) {
+			var angleOfDeg = this.angleOfDeg,
+				centerX = this.centerX,
+				centerY = this.centerY,
+				width = this.width,
+				height = this.height,
+				angleOfRad = degToRad(this.angleOfDeg)
+
+			var leftTop = [centerX - width / 2,
+										centerY - height / 2],
+					rightTop = [centerX + width / 2,
+											centerY - height / 2],
+					rightBottom = [centerX + width / 2,
+												centerY + height /2],
+					leftBottom = [centerX - width / 2,
+												centerY + height / 2];
+
+
+
+			var rotateLeftTop = rotatePoint([centerX, centerY],
+											leftTop, angleOfRad),
+					rotateRightTop = rotatePoint([centerX, centerY],
+											rightTop, angleOfRad),
+					rotateRightBottom = rotatePoint([centerX, centerY],
+											rightBottom, angleOfRad),
+					rotateLeftBottom = rotatePoint([centerX, centerY],
+											leftBottom, angleOfRad);
+
+			this.vertexs.length = 0
+			this.vertexs.push(rotateLeftTop)
+			this.vertexs.push(rotateRightTop)
+			this.vertexs.push(rotateRightBottom)
+			this.vertexs.push(rotateLeftBottom)
+
+			ctx.beginPath()
+			ctx.moveTo(rotateLeftTop.x, rotateLeftTop.y)
+			ctx.lineTo(rotateRightTop.x, rotateRightTop.y)
+			ctx.lineTo(rotateRightBottom.x, rotateRightBottom.y)
+			ctx.lineTo(rotateLeftBottom.x, rotateLeftBottom.y)
+			ctx.closePath()
+
+
+			this.MTDShapes.points.length = 0
+			this.MTDShapes.addPoint(rotateLeftTop.x, rotateLeftTop.y)
+			this.MTDShapes.addPoint(rotateRightTop.x, rotateRightTop.y)
+			this.MTDShapes.addPoint(rotateRightBottom.x, rotateRightBottom.y)
+			this.MTDShapes.addPoint(rotateLeftBottom.x, rotateLeftBottom.y)
+
+
+			this.isChangeAngle = false
+		} else {
+			var vertexs = this.vertexs
+			var rotateLeftTop = [vertexs[0].x, vertexs[0].y],
+					rotateRightTop = [vertexs[1].x, vertexs[1].y],
+					rotateRightBottom = [vertexs[2].x, vertexs[2].y],
+					rotateLeftBottom = [vertexs[3].x, vertexs[3].y]
+			
+			// console.log(vertexs[0].x, vertexs[0].y)
+			// console.log(this.MTDShapes.points[0])
+			ctx.beginPath()
+			ctx.moveTo(rotateLeftTop[0], rotateLeftTop[1])
+			ctx.lineTo(rotateRightTop[0], rotateRightTop[1])
+			ctx.lineTo(rotateRightBottom[0], rotateRightBottom[1])
+			ctx.lineTo(rotateLeftBottom[0], rotateLeftBottom[1])
+			ctx.closePath()
+		}
+	},
+
+	destroy: function() {
+		this.$controlLeft.removeEventListener('touchstart', this.clickControlLeftHandlePack, false)
+		this.$controlRight.removeEventListener('touchstart', this.clickControlRightHandlePack, false)
+	}
+}
+
+module.exports = Racket
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*// 挡板
 function Racket(canvas, options) {
 	if(canvas === undefined)  throw 'racket 参数有问题'
 	if(options === undefined) options = {}
@@ -148,3 +345,4 @@ module.exports = Racket
 
 
 
+*/
