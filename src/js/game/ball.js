@@ -13,8 +13,8 @@ function Ball(canvas, options) {
 	this.top = options.top
 	this.width = options.width
 	this.height = options.height
-	this.velocityX = options.velocityX || 6
-	this.velocityY = options.velocityY || 8
+	this.velocityX = options.velocityX || 7
+	this.velocityY = options.velocityY || 7
 	// this.fillStyle = options.fillStyle || 'orange'
 	this.imageObj = options.imageObj
 	this.isRunning = true
@@ -111,12 +111,10 @@ Ball.prototype = {
 		ctx.restore()
 	},
 
-	changeVelocity: function(velocityX, velocityY, angleOfFinal) {
+	changeVelocity: function(velocityX, velocityY) {
 		// console.log(angleOfFinal)
-		if(angleOfFinal <= 180) {
-			this.velocityY = -velocityY
-			this.velocityX = velocityX
-		}
+		this.velocityX = velocityX
+		this.velocityY = velocityY
 
 	},
 

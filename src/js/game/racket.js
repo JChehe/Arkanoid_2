@@ -14,12 +14,12 @@ function Racket(canvas, options) {
 	this.centerX = canvas.width / 2
 	this.centerY = canvas.height * (4 / 5)
 	this.fillStyle = '#fff'
-	this.angleOfDeg = 0
+	this.angleOfDeg = 30
 	this.vertexs = []
 	this.isChangeAngle = true
 	this.MTDShapes = null
-	this.MAX_LEFT_ANGLE = -30
-	this.MAX_RIGHT_ANGLE = 30
+	this.MAX_LEFT_ANGLE = -180
+	this.MAX_RIGHT_ANGLE = 180
 
 	this.$controlLeft = document.querySelector('.control_racket .left')
 	this.$controlRight = document.querySelector('.control_racket .right')
@@ -42,19 +42,23 @@ Racket.prototype = {
 
 	clickControlLeftHandle: function(e) {
 		e.preventDefault()
-		this.angleOfDeg -= 2
-		if(this.angleOfDeg < this.MAX_LEFT_ANGLE) {
-			this.angleOfDeg = this.MAX_LEFT_ANGLE
+		if(!game.isPaused) {
+			this.angleOfDeg -= 20
+			if(this.angleOfDeg < this.MAX_LEFT_ANGLE) {
+				this.angleOfDeg = this.MAX_LEFT_ANGLE
+			}
+			this.isChangeAngle = true
 		}
-		this.isChangeAngle = true
 	},
 	clickControlRightHandle: function(e) {
 		e.preventDefault()
-		this.angleOfDeg += 2
-		if(this.angleOfDeg > this.MAX_RIGHT_ANGLE) {
-			this.angleOfDeg = this.MAX_RIGHT_ANGLE
+		if(!game.isPaused) {
+			this.angleOfDeg += 20
+			if(this.angleOfDeg > this.MAX_RIGHT_ANGLE) {
+				this.angleOfDeg = this.MAX_RIGHT_ANGLE
+			}
+			this.isChangeAngle = true
 		}
-		this.isChangeAngle = true
 	},
 
 	draw: function() {

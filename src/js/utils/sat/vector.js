@@ -1,11 +1,14 @@
+// Vector 向量
+
 var Vector = function(point) {
   if (point === undefined) {
-    this.x = 0;
-    this.y = 0;
-  } else {
-    this.x = point.x;
-    this.y = point.y;
-  }
+      this.x = 0;
+      this.y = 0;
+   }
+   else {
+      this.x = point.x;
+      this.y = point.y;
+   }
 }
 
 Vector.prototype = {
@@ -31,7 +34,7 @@ Vector.prototype = {
   dotProduct: function(vector) {
     return this.x * vector.x + this.y * vector.y
   },
-
+  
   // 由两点生成边
   edge: function(vector) {
     return this.subtract(vector)
@@ -49,9 +52,9 @@ Vector.prototype = {
     var v = new Vector(0, 0),
       m = this.getMagnitude()
 
-    if (m !== 0) {
+    if(m !== 0) {
       v.x = this.x / m
-      v.y = this.y / m
+      v.y = this.y /m
     }
     return v
   },

@@ -15,6 +15,7 @@ var afterCollised = require('./utils/detect2RectCollision').afterCollised
 var preloader = require('./game/preload')
 var sound = require('./game/sound')
 var Polygon = require('./utils/sat/polygon').Polygon
+var Point = require('./utils/sat/polygon').Point
 var Vector = require('./utils/sat/vector')
 
 
@@ -55,14 +56,14 @@ function Game() {
 	this.restartCount = 0
 
 	// 以下参数以 ratio = 1 时
-	this.RACKET_WIDTH = 300
+	this.RACKET_WIDTH = IPHONE6_WIDTH + 10
 	this.RACKET_HEIGHT = 30
-	this.RACKET_TOP = 467
+	this.RACKET_TOP = 500
 
 	this.BALL_WIDTH = 32
 	this.BALL_HEIGHT = 29
-	this.BALL_INIT_LEFT = 300
-	this.BALL_INIT_TOP = 300
+	this.BALL_INIT_LEFT = 100
+	this.BALL_INIT_TOP = 350
 
 	this.WELFARE_WIDTH = canvas.width * (160 / 375) // 约为 0.42 倍 canvas 宽
 	this.WELFARE_TOP = 13
@@ -73,7 +74,7 @@ function Game() {
 	this.BRICK_WIDTH = canvas.width / this.BRICK_COL
 	this.BRICK_HEIGHT = 50  * ratio
 
-	this.hp = this.BRICK_ROW * this.BRICK_COL
+	this.HP = this.BRICK_ROW * this.BRICK_COL
 }
 
 Game.prototype = {
@@ -155,7 +156,7 @@ Game.prototype = {
 		})
 
 		this.restartCount++
-		this.hp = this.BRICK_ROW * this.BRICK_COL
+		this.HP = this.BRICK_ROW * this.BRICK_COL
 		this.isGameOver = false
 		this.isPaused = true
 		this.runningTime = 0
@@ -246,7 +247,7 @@ Game.prototype = {
 			game.runningTime = +new Date() - game.runningTime
 			console.log('游戏持续时间：' + game.runningTime / 1000 + '秒')
 		}
-		if(game.score === game.hp) {
+		if(game.score === game.HP) {
 			game.isGameOver = true
 			game.isPaused = true
 			$gameComplete.show().addClass('success')
@@ -263,7 +264,9 @@ Game.prototype = {
 			this._clearScreen(ctx)
 
 			if(this.ball.isAbleCollisionWithRacket) {
+				// detectCollisions(this.ball.MTDShapes, this.racket.MTDShapes)
 				detectCollisions(this.ball.MTDShapes, this.racket.MTDShapes)
+
 			}
 
 			if(this.ball.top < this.detectBrickCollideBoundary) {
@@ -288,50 +291,20 @@ Game.prototype = {
 }
 
 
-
-
+function detectCollisions(shape1, shape2) {
+	var mtv = shape1.collidesWith(shape2)
+  if(collisionDetected(mtv)) {
+    // console.log(mtv)
+    bounce(mtv, shape1, shape2)
+		game.ball.isAbleCollisionWithRacket = false
+		sound.wall()
+  }
+}
+function collisionDetected(mtv) {
+  return mtv.axis != undefined || mtv.overlap !== 0
+}
 window.game = new Game();
 
-/*
-function detectRacketAndBallCollide() {
-	var ballAndRacketAngle = detect2RectCollision(game.ball, game.racket)
-	
-	if(ballAndRacketAngle !== null) {
-		game.ball.isAbleCollisionWithRacket = false
-		var ballBottom = game.ball.top + game.ball.height,
-			racketBottom = game.racket.top + game.racket.height,
-			ball = game.ball,
-			racket = game.racket;
-
-		if(ball.left + ball.width / 2 <= racket.left) {
-			console.log('非正常碰撞')
-
-			if(ball.velocityX >= 0) {
-				ball.velocityX = -ball.velocityX
-			} else {
-				ball.velocityX -= 1
-			}
-		} else if (ball.left + 5 > racket.left + racket.width) {
-			console.log('非正常碰撞')
-
-			if(ball.velocityX <= 0) {
-				ball.velocityX = -ball.velocityX
-			} else {
-				ball.velocityX += 1
-			}
-		} else {
-			console.log('正常碰撞')
-			var ballCenterX = game.ball.left + game.ball.width / 2,
-				racketCenterX = game.racket.left + game.racket.width / 2,
-				distanceOfcenterX = ballCenterX - racketCenterX;
-
-			game.ball.changeVelocityX(distanceOfcenterX)
-			game.ball.velocityY = -game.ball.velocityY
-		}
-
-		sound.wall()
-	}
-}*/
 
 function detectBricksAndBallCollide() {
 	for(var i = 0, len = game.bricks.length; i < len; i++) {
@@ -351,7 +324,8 @@ function detectBricksAndBallCollide() {
 	}
 }
 
-function detectCollisions(polygon1, polygon2) {
+/*function detectCollisions(polygon1, polygon2) {
+	console.log('polygon1.collidesWith(polygon2)', polygon1.collidesWith(polygon2))
 	if(polygon1.collidesWith(polygon2)) {
 			console.log('碰撞')
 			game.ball.isAbleCollisionWithRacket = false
@@ -362,39 +336,94 @@ function detectCollisions(polygon1, polygon2) {
 
 
 function collisionHandle() {
-	var racketAngleOfDeg = game.racket.angleOfDeg
-
-	var racketVector = new Vector({
-		x: game.racket.vertexs[1].x - game.racket.vertexs[0].x,
-		y: game.racket.vertexs[1].y - game.racket.vertexs[0].y
-	})
-/*	console.log({
-		x: game.racket.vertexs[1].x - game.racket.vertexs[0].x,
-		y: game.racket.vertexs[1].y - game.racket.vertexs[0].y
-	})*/
-	var ballVector = new Vector({
-		x: game.ball.velocityX,
-		y: game.ball.velocityY
-	})
-
-	var cosOfTwo = racketVector.dotProduct(ballVector) 
-									/ (racketVector.getMagnitude() * ballVector.getMagnitude())
+	
+}*/
 
 
-	var angleOfTwo = Math.acos(cosOfTwo) * (180 / Math.PI)
+function separate(mtv) {
+  var dx, dy, velocityMagnitude, point
+  var velocityX = game.ball.velocityX,
+  		velocityY = game.ball.velocityY
 
-	// console.log('angleOfTwo', angleOfTwo)
-	var angleOfFinal = angleOfTwo
-	var ballVectorLength = ballVector.getMagnitude()
+  if (mtv.axis === undefined) { // circle
+    point = new Point()
+    velocityMagnitude = Math.sqrt(Math.pow(velocityX, 2) +
+      Math.pow(velocityY, 2))
+    point.x = velocityX / velocityMagnitude
+    point.y = velocityY / velocityMagnitude
 
-	var newVelocityY = Math.sin(angleOfFinal * (Math.PI / 180)) * ballVectorLength
-	var newVelocityX = Math.cos(angleOfFinal * (Math.PI / 180)) * ballVectorLength
+    mtv.axis = new Vector(point);
+  }
 
-	game.ball.changeVelocity(newVelocityX, newVelocityY, angleOfFinal)
+  dy = mtv.axis.y * mtv.overlap
+  dx = mtv.axis.x * mtv.overlap
 
-	// console.log(newVelocityX)
-	// console.log(newVelocityY)
+  if ((dx < 0 && velocityX < 0) || (dx > 0 && velocityX > 0)) {
+    dx = -dx
+  }
+
+  if ((dy < 0 && velocityY < 0) || (dy > 0 && velocityY > 0)) {
+    dy = -dy
+  }
+
+  game.ball.MTDShapes.move(dx, dy)
+  game.ball.left += dx
+  game.ball.top += dy
 }
+
+function checkMTVAxisDirection(mtv, collider, collidee) {
+  var centroid1, centroid2, centroidVector, centroidUnitVector
+
+  if(mtv.axis === undefined) return
+
+  centroid1 = new Vector(collider.centroid())
+  centroid2 = new Vector(collidee.centroid())
+  centroidUnitVector = centroid2.subtract(centroid1)
+  centroidVector = (new Vector(centroidVector)).normalize()
+
+  if(centroidUnitVector.dotProduct(mtv.axis) > 0) {
+    mtv.axis.x = -mtv.axis.x
+    mtv.axis.y = -mtv.axis.y
+  }
+}
+function bounce(mtv, collider, collidee) {
+	var velocityX = game.ball.velocityX,
+			velocityY = game.ball.velocityY
+
+  var dotProductRatio, vdotl, ldotl, point,
+    velocityVector = new Vector(new Point(velocityX, velocityY)),
+    velocityUnitVector = velocityVector.normalize(),
+    velocityVectorMagnitude = velocityVector.getMagnitude(),
+    perpendicular;
+
+  checkMTVAxisDirection(mtv, collider, collidee)
+
+  point = new Point()
+
+  if(mtv.axis !== undefined) {
+    perpendicular = mtv.axis.perpendicular()
+  } else {
+    perpendicular = new Vector(new Point(-velocityUnitVector.y, 
+                                         velocityUnitVector.x))
+  }
+
+  vdotl = velocityUnitVector.dotProduct(perpendicular)
+  ldotl = perpendicular.dotProduct(perpendicular)
+
+  dotProductRatio = vdotl / ldotl
+
+  point.x = 2 * dotProductRatio * perpendicular.x - velocityUnitVector.x
+  point.y = 2 * dotProductRatio * perpendicular.y - velocityUnitVector.y
+
+  separate(mtv)
+
+  game.ball.velocityX = point.x * velocityVectorMagnitude
+  game.ball.velocityY = point.y * velocityVectorMagnitude
+}
+
+
+
+
 
 
 // DOM 与游戏交互部分

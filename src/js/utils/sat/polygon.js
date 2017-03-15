@@ -1,6 +1,9 @@
 var Vector = require('./vector')
 var Projection = require('./projection')
 var Shape = require('./shape')
+var ShapeConstructor = Shape.ShapeConstructor
+var polygonCollidesWithPolygon = Shape.polygonCollidesWithPolygon
+var polygonCollidesWithCircle = Shape.polygonCollidesWithPolygon
 
 var Point = function(x, y) {
   this.x = x
@@ -13,7 +16,7 @@ var Polygon = function() {
   this.fillStyle = 'white'
 }
 
-Polygon.prototype = new Shape()
+Polygon.prototype = new ShapeConstructor()
 
 Polygon.prototype.getAxes = function() {
   var v1 = new Vector(),
@@ -29,6 +32,7 @@ Polygon.prototype.getAxes = function() {
 
     axes.push(v1.edge(v2).normal())
   }
+
   v1.x = this.points[this.points.length - 1].x
   v1.y = this.points[this.points.length - 1].y
 
@@ -57,6 +61,37 @@ Polygon.prototype.project = function(axis) {
 Polygon.prototype.addPoint = function(x, y) {
   this.points.push(new Point(x, y))
 }
+Polygon.prototype.centroid = function() {
+  var pointSum = new Point(0, 0);
+
+  for (var i = 0, point; i < this.points.length; ++i) {
+    point = this.points[i];
+    pointSum.x += point.x;
+    pointSum.y += point.y;
+  }
+  return new Point(pointSum.x / this.points.length,
+    pointSum.y / this.points.length);
+}
+
+Polygon.prototype.boundingBox = function(dx, dy) {
+  var minx = BIG_NUMBER,
+    miny = BIG_NUMBER,
+    maxx = -BIG_NUMBER,
+    maxy = -BIG_NUMBER,
+    point;
+
+  for (var i = 0; i < this.points.length; ++i) {
+    point = this.points[i];
+    minx = Math.min(minx, point.x);
+    miny = Math.min(miny, point.y);
+    maxx = Math.max(maxx, point.x);
+    maxy = Math.max(maxy, point.y);
+  }
+
+  return new BoundingBox(minx, miny,
+    parseFloat(maxx - minx),
+    parseFloat(maxy - miny));
+};
 
 Polygon.prototype.createPath = function(context) {
   if (this.points.length === 0) {
@@ -83,13 +118,22 @@ Polygon.prototype.move = function(dx, dy) {
   }
 }
 
-Polygon.prototype.collidesWith = function(shape) {
+/*Polygon.prototype.collidesWith = function(shape) {
   var axes = shape.getAxes()
-  if (axes === undefined) {
+  if(axes === undefined) {
     return polygonCollidesWithCircle(this, shape)
   } else {
     axes = axes.concat(this.getAxes())
     return !this.separationOnAxes(axes, shape)
+  }
+}
+*/
+
+Polygon.prototype.collidesWith = function(shape, displacement) {
+  if (shape.radius !== undefined) {
+    return polygonCollidesWithCircle(this, shape, displacement)
+  } else {
+    return polygonCollidesWithPolygon(this, shape, displacement)
   }
 }
 
