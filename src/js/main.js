@@ -324,22 +324,6 @@ function detectBricksAndBallCollide() {
 	}
 }
 
-/*function detectCollisions(polygon1, polygon2) {
-	console.log('polygon1.collidesWith(polygon2)', polygon1.collidesWith(polygon2))
-	if(polygon1.collidesWith(polygon2)) {
-			console.log('碰撞')
-			game.ball.isAbleCollisionWithRacket = false
-			collisionHandle()
-			sound.wall()
-	}
-}
-
-
-function collisionHandle() {
-	
-}*/
-
-
 function separate(mtv) {
   var dx, dy, velocityMagnitude, point
   var velocityX = game.ball.velocityX,
